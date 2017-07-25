@@ -1,19 +1,18 @@
 var Sherlock = require('sherlockjs');
 
-
 module.exports = {
 	getEventData: function (text) {
 		var eventData = {};
 		eventData = sherlocker(text, eventData);
 
-		//call luis or google
+		eventData.location = getLocation(text);
 
 		return eventData;
 	}
 }
 
 function sherlocker(text, eventData) {
-	//shelock
+	//sherlock
 	sherlockedText = Sherlock.parse(text)
 	eventData.title = sherlockedText.eventTitle
 	eventData.startDate = sherlockedText.startDate
@@ -23,3 +22,32 @@ function sherlocker(text, eventData) {
 	return eventData;
 }
 
+function getLocation(text){
+
+
+	const Language = require('@google-cloud/language');
+	const projectId = 'pic2cal';
+	const language = Language({
+ 		projectId: projectId,
+    	keyFilename: './keys.json'
+	});
+
+		const document = language.document({ content: text });
+
+
+	document.detectEntities()
+  .then((results) => {
+    const entities = results[1].entities;
+
+    console.log('Entities:');
+    entities.forEach((entity) => {
+     
+      if (entity.type == "LOCATION") {
+      	 return entity.name;
+      }
+    });
+  })
+  .catch((err) => {
+    console.error('ERROR:', err);
+  });
+}
